@@ -35,7 +35,7 @@ The revised evaluation includes:
 
 ## Output files
 
-The `results_extended_v2/` directory contains:
+contains:
 
 - `ablation_raw.csv`
 - `ablation_summary.csv`
