@@ -74,7 +74,7 @@ general security guarantees.
 
 ### Requirements
 
-- Python 3.10 or later.
+- Python 3.13.14.
 - NumPy.
 - Pandas.
 - Matplotlib.
@@ -94,46 +94,7 @@ python3 run_extended_experiments2.py
 The script regenerates the experiment CSV files and PDF figures in the
 repository root directory.
 
-## Manuscript compilation
 
-The manuscript uses the IEEEtran document class and BibTeX.
-
-Compile it with:
-
-```bash
-pdflatex main.tex
-bibtex main
-pdflatex main.tex
-pdflatex main.tex
-```
-
-The PDF figure files must remain in the same directory as `main.tex`:
-
-```text
-ablation_accuracy.pdf
-attack_sweep.pdf
-packet_loss_sweep.pdf
-```
-
-The corresponding figure commands in `main.tex` are:
-
-```latex
-\includegraphics[width=0.98\linewidth]{ablation_accuracy.pdf}
-```
-
-```latex
-\includegraphics[width=0.98\linewidth]{attack_sweep.pdf}
-```
-
-```latex
-\includegraphics[width=0.98\linewidth]{packet_loss_sweep.pdf}
-```
-
-Check the compilation log for unresolved references or errors:
-
-```bash
-grep -iE "undefined|not found|multiply defined|error" main.log
-```
 
 ## Important interpretation
 
