@@ -157,14 +157,7 @@ reviewed and verified the final manuscript and takes full responsibility for
 its content, mathematical formulations, experimental design, results,
 interpretations, and references.
 
-## License
 
-The simulation code and generated data are provided for research and
-reproducibility purposes.
-
-No specific open-source license has been declared for this repository. Users
-should contact the author before redistributing modified versions or using the
-materials for commercial purposes.
 
 ## Contact
 
