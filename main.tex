@@ -2,7 +2,6 @@
 
 \usepackage{cite}
 \usepackage{graphicx}
-\DeclareGraphicsRule{.jfif}{jpg}{.jfif}{}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{algorithmic}
 \usepackage{algorithm}
@@ -36,10 +35,11 @@
 
 \begin{document}
 
+\raggedbottom
 \maketitle
 
 \begin{abstract}
-Autonomous deep-space missions must increasingly generate and evaluate scientific information with limited or delayed human oversight. This creates a cybersecurity assurance problem: how can mission operators assess the integrity and evidential trustworthiness of scientific claims produced by autonomous agents when communication delays, intermittent connectivity, sensor faults, and compromised probes prevent immediate human verification? Existing work provides important but separate building blocks, including spacecraft autonomy verification and validation, trusted-AI frameworks, multi-agent trust and reputation, provenance, secure delay-tolerant networking, and claim-level auditability for AI-generated research. This paper proposes TRUSTPASS, a layered architecture that combines evidence packages, sensor-health assessment, uncertainty, provenance and integrity metadata, cross-relay verification, and dynamic reputation. We formalize evidence aggregation and trust decisions, define a machine-verifiable Trust Passport schema, and model threats including compromised probes, false consensus, relay tampering, replay, provenance manipulation, and compromised reasoning components. We evaluate the architecture in a synthetic multi-agent simulation using 80 Monte Carlo trials per configuration. The revised evaluation includes component ablations, compromised-agent sweeps, and packet-loss experiments. Sensor-health and provenance/integrity weighting provide the largest gains under the tested configuration, while dynamic reputation is most useful for smaller constellations. Cross-relay verification and uncertainty weighting do not improve accuracy in every tested regime, exposing calibration and consensus-reinforcement limitations. The results constitute a controlled proof of concept, not a mission-ready validation.
+Autonomous deep-space missions must increasingly generate and evaluate scientific information with limited or delayed human oversight. This creates a cybersecurity assurance problem: how can mission operators assess the integrity and evidential trustworthiness of scientific claims produced by autonomous agents when communication delays, intermittent connectivity, sensor faults, and compromised probes prevent immediate human verification? Existing work provides important but separate building blocks, including spacecraft autonomy verification and validation, trusted-AI frameworks, multi-agent trust and reputation, provenance, delay- and disruption-tolerant communication, and claim-level auditability for AI-generated research. This paper proposes TRUSTPASS, a layered architecture that combines evidence packages, sensor-health assessment, uncertainty, provenance and integrity metadata, cross-relay verification, and dynamic reputation. We formalize evidence aggregation and trust decisions, define a conceptual Trust Passport schema, and model threats including compromised probes, false consensus, relay tampering, replay, provenance manipulation, and compromised reasoning components. We evaluate the architecture in a synthetic multi-agent simulation using 80 Monte Carlo trials per configuration. The evaluation includes component ablations, compromised-agent sweeps, and packet-loss experiments. Sensor-health weighting provides the largest measured contribution, followed by provenance and integrity weighting, while dynamic reputation provides its largest benefit in the smallest constellation. Uncertainty weighting has negligible effect under the current calibration, and population-based cross-relay verification can slightly reduce accuracy in some configurations. The results constitute a controlled proof of concept rather than mission-ready validation.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -58,11 +58,12 @@ Existing research provides separate contributions to this problem. Space-autonom
 However, these capabilities remain largely separated. In the literature identified and screened for this study, we found no evaluated end-to-end framework that combines multi-agent trust and reputation, provenance-rich scientific claims, uncertainty-aware evidence fusion, cross-agent verification, and cybersecurity threat modeling for autonomous deep-space scientific systems.
 
 This paper makes four contributions:
+
 \begin{itemize}
   \item It defines cybersecurity assurance of AI-generated scientific claims in autonomous deep-space multi-agent systems as a distinct research problem.
   \item It proposes TRUSTPASS, a layered architecture combining evidence packages, sensor health, provenance, integrity, cross-relay verification, and dynamic reputation.
-  \item It defines a machine-verifiable Trust Passport schema and formal trust aggregation model.
-  \item It evaluates the architecture using component ablations, attack-intensity sweeps, packet-loss experiments, and 95\% confidence intervals over 80 Monte Carlo trials.
+  \item It defines a conceptual Trust Passport schema and formal trust aggregation model.
+  \item It evaluates the architecture using component ablations, compromised-agent sweeps, packet-loss experiments, and 95\% confidence intervals over 80 Monte Carlo trials.
 \end{itemize}
 
 The evaluation is a synthetic proof of concept. It does not represent flight validation, operational cryptographic deployment, or scientific validation of real planetary observations.
@@ -74,7 +75,7 @@ The evaluation is a synthetic proof of concept. It does not represent flight val
 
 Spacecraft autonomy requires assurance because autonomous decisions can affect expensive and difficult-to-replace assets. Reviews of verification and validation for space autonomous systems describe model checking, theorem proving, runtime verification, simulation-based testing, and machine-learning verification as important techniques~\cite{cardoso2021review}. JPL research has applied model checking, automated testing, formal representations, assurance cases, and mission testbeds to autonomy assurance~\cite{feather2023assurance,feather2022assurance,prokop2021case}.
 
-Trusted-AI frameworks have also been adapted to space mission autonomy. Slingerland et al. describe a trusted-AI framework tailored to mission criticality and stakeholder needs~\cite{slingerland2022adapting}. Mandrake et al. report experience applying such a framework to rover analytics and onboard science-data summarization~\cite{mandrake2022space}. The Space Trusted Autonomy Readiness Levels (STARL) framework separates autonomy readiness from trust readiness, recognizing that the delegation of authority requires an independent assessment of trustworthiness~\cite{hobbs2023starl}.
+Trusted-AI frameworks have also been adapted to space mission autonomy. Slingerland et al. describe a trusted-AI framework tailored to mission criticality and stakeholder needs~\cite{slingerland2022adapting}. Mandrake et al. report experience applying such a framework to rover analytics and onboard science-data summarization~\cite{mandrake2022space}. The Space Trusted Autonomy Readiness Levels framework separates autonomy readiness from trust readiness, recognizing that delegation of authority requires an independent assessment of trustworthiness~\cite{hobbs2023starl}.
 
 These works provide essential assurance foundations, but they primarily address the safety, readiness, and operational trust of autonomous systems. They do not evaluate a distributed mechanism for assessing the cybersecurity and evidential trustworthiness of scientific claims exchanged among multiple autonomous probes.
 
@@ -98,19 +99,21 @@ These systems motivate a claim-centric assurance model for space science. Howeve
 
 \subsection{Comparative Research Gap}
 
-Table~\ref{tab:related-comparison} compares representative research streams. ``Partial'' indicates that a capability is addressed but not integrated or evaluated for the target problem. ``Not reported'' indicates that the reviewed source did not provide sufficient evidence.
+Table~\ref{tab:related-comparison} compares representative research streams. ``Partial'' indicates that a capability is addressed but not integrated or evaluated for the target problem.
 
 \begin{table*}[t]
 \centering
 \caption{Comparison of representative literature with TRUSTPASS.}
 \label{tab:related-comparison}
 \scriptsize
-\begin{tabular}{p{2.7cm}cccccccccc}
+\setlength{\tabcolsep}{2pt}
+\renewcommand{\arraystretch}{0.9}
+\begin{tabular}{p{2.5cm}cccccccccc}
 \toprule
-Work & Space autonomy & MAS trust & Provenance &
-Evidence/uncertainty & Cross-agent verification &
-Dynamic reputation & Cybersecurity &
-AI claim assurance & Deep-space constraints & Evaluation \\
+Work & \shortstack{Space\\autonomy} & \shortstack{MAS\\trust} & Provenance &
+\shortstack{Evidence/\\uncertainty} & \shortstack{Cross-agent\\verification} &
+\shortstack{Dynamic\\reputation} & Cybersecurity &
+\shortstack{AI claim\\assurance} & \shortstack{Deep-space\\constraints} & Evaluation \\
 \midrule
 Cardoso et al.~\cite{cardoso2021review}
 & Yes & No & No & Partial & No & No & Partial & No & Yes & Review \\
@@ -221,7 +224,7 @@ where $\tau_{i,t}$ is historical agent trust, $\rho_{i,t}$ is cross-agent confir
 
 \subsection{Trust Aggregation}
 
-For a claim type $k$, TRUSTPASS computes:
+For a binary phenomenon, let $c_{i,k,t}\in\{0,1\}$ denote the claim value reported by agent $a_i$ for phenomenon $k$ at time $t$. TRUSTPASS computes:
 
 \begin{equation}
 T(c_{k,t}) =
@@ -274,14 +277,14 @@ In operational deployment, ground truth would not be immediately available. Repu
 
 \subsection{Trust Passport Schema}
 
-Table~\ref{tab:passport-schema} defines the fields used by the proposed architecture.
+Table~\ref{tab:passport-schema} defines the conceptual fields used by the proposed architecture. The schema is a conceptual interface definition rather than a serialized flight-data format. The simulator models selected fields as synthetic attributes and does not implement a complete Trust Passport protocol, cryptographic key-management system, or PROV-DM/PROV-AGENT serialization.
 
-\begin{table}[t]
+\begin{table*}[t]
 \centering
 \caption{Trust Passport schema.}
 \label{tab:passport-schema}
 \scriptsize
-\begin{tabular}{p{2.1cm}p{4.9cm}}
+\begin{tabular}{p{2.5cm}p{11.5cm}}
 \toprule
 Field & Purpose \\
 \midrule
@@ -303,7 +306,7 @@ Cross-agent confirmation & Independent corroboration or disagreement. \\
 Parent passport hashes & Links to earlier evidence packages. \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 
 Cryptographic integrity establishes that a package was produced by a particular source and was not modified after signing. It does not establish that the observation or scientific conclusion is true.
 
@@ -328,7 +331,7 @@ The Trust Passport Manager packages claims and evidence into machine-verifiable 
 
 Cross-Relay Verification compares passports received from multiple agents. It evaluates agreement, evidence quality, health, provenance, and integrity. It is not a simple majority vote. It should account for observation context, sensor independence, temporal alignment, and potential common-mode failures.
 
-In the current simulator, the CRV heuristic estimates a population-supported claim using received evidence and down-weights reports that disagree with that estimate or have weak evidence quality. This implementation is intentionally limited and can reinforce a misleading consensus when compromised agents dominate the received population.
+In the current simulator, CRV is implemented as a population-agreement heuristic. It uses only received claims and evidence-quality indicators, not hidden ground truth. Because population agreement can be dominated by compromised agents, CRV may reinforce a misleading consensus.
 
 \subsection{Dynamic Reputation Manager}
 
@@ -367,7 +370,7 @@ TRUSTPASS does not claim to solve all reasoning-layer attacks. Its role is to ma
 
 The simulator models $N\in\{6,12,25\}$ agents, $K=3$ independent phenomena, and $T=30$ time steps. Each configuration uses 80 independent Monte Carlo trials.
 
-Sensors generate:
+Agents are assigned orbiter, lander, rover, or generic roles with different baseline sensor-noise factors. Observations are generated from binary truth states with Gaussian noise and adversarial fault terms:
 
 \begin{equation}
 o_{i,k,t}
@@ -376,8 +379,6 @@ o_{i,k,t}
 \end{equation}
 
 where $\mu_k$ is the true binary state, $\epsilon$ is Gaussian noise, and $\delta$ is a fault or adversarial term.
-
-The experiments assign orbiter, lander, rover, and generic sensor profiles with different baseline noise levels.
 
 \subsection{Baselines and Ablations}
 
@@ -400,7 +401,7 @@ The ablations are:
   \item \textsc{TP-NoProvenance}: removes provenance and integrity weighting.
 \end{itemize}
 
-Provenance quality and integrity are synthetic simulator attributes. The experiment does not parse or validate real PROV-DM or PROV-AGENT graphs.
+Provenance quality and integrity are synthetic simulator attributes. The experiment does not parse or validate complete PROV-DM or PROV-AGENT graphs.
 
 \subsection{Adversarial and Network Conditions}
 
@@ -408,7 +409,7 @@ The primary adversarial configuration uses 60\% compromised agents for $N=6$ and
 
 The attack sweep varies the compromised-agent fraction from 10\% to 70\% at $N=12$. The packet-loss sweep varies packet loss from 0\% to 50\% at $N=12$, with 55\% compromised agents and 12\% relay compromise.
 
-Missing packets are not interpreted as negative claims. Reputation is updated only for evidence that is received.
+Missing packets remain missing and are excluded from prediction aggregation. They are not interpreted as negative claims. Reputation is updated only for evidence that is received.
 
 \subsection{Metrics and Confidence Intervals}
 
@@ -427,18 +428,18 @@ where $s$ is the trial-level standard deviation and $n=80$.
 
 \subsection{Ablation Results}
 
-Table~\ref{tab:ablation} reports the corrected v2 ablation results.
+Table~\ref{tab:ablation} reports the corrected results from \path{ablation_summary.csv}.
 
 \begin{table}[t]
 \centering
-\caption{Corrected TrustPass ablation results. Values are mean accuracy with 95\% confidence intervals over 80 trials.}
+\caption{TRUSTPASS ablation results. Values are mean accuracy with 95\% confidence intervals over 80 trials.}
 \label{tab:ablation}
 \scriptsize
 \begin{tabular}{lccc}
 \toprule
 Method & $N=6$ & $N=12$ & $N=25$ \\
 \midrule
-TrustPass & 0.960 $\pm$ 0.004 & 0.998 $\pm$ 0.001 & 1.000 $\pm$ 0.000 \\
+TRUSTPASS & 0.960 $\pm$ 0.004 & 0.998 $\pm$ 0.001 & 1.000 $\pm$ 0.000 \\
 TP-NoDRM & 0.904 $\pm$ 0.007 & 0.995 $\pm$ 0.002 & 1.000 $\pm$ 0.000 \\
 TP-NoHealth & 0.655 $\pm$ 0.010 & 0.881 $\pm$ 0.006 & 0.956 $\pm$ 0.004 \\
 TP-NoUncertainty & 0.960 $\pm$ 0.004 & 0.998 $\pm$ 0.001 & 1.000 $\pm$ 0.000 \\
@@ -448,18 +449,20 @@ TP-NoProvenance & 0.787 $\pm$ 0.009 & 0.895 $\pm$ 0.007 & 0.962 $\pm$ 0.004 \\
 \end{tabular}
 \end{table}
 
-Sensor-health weighting provides the largest accuracy contribution under the tested configuration. Removing it reduces accuracy by 30.5 percentage points at $N=6$, 11.8 percentage points at $N=12$, and 4.4 percentage points at $N=25$.
+Full TRUSTPASS achieves 0.960 accuracy at $N=6$, 0.998 at $N=12$, and 1.000 at $N=25$.
+
+Sensor-health weighting provides the largest measured contribution. Removing it reduces accuracy by 30.5 percentage points at $N=6$, 11.7 percentage points at $N=12$, and 4.4 percentage points at $N=25$.
 
 Removing provenance and integrity weighting reduces accuracy by 17.3 percentage points at $N=6$, 10.3 percentage points at $N=12$, and 3.8 percentage points at $N=25$. These effects decrease as constellation redundancy increases.
 
-Dynamic reputation improves accuracy by 5.6 percentage points at $N=6$ and 0.3 percentage points at $N=12$; at $N=25$, both configurations reach 1.000 in the reported experiment. Uncertainty weighting produces almost no difference in this configuration.
+Removing dynamic reputation reduces accuracy by 5.6 percentage points at $N=6$ and 0.3 percentage points at $N=12$. Both the full and ablated configurations reach 1.000 at $N=25$.
 
-The \textsc{TP-NoCRV} variant slightly outperforms full TrustPass at $N=6$ and $N=12$. This indicates that the current population-agreement CRV heuristic can reinforce a misleading consensus when compromised agents dominate the received population. Therefore, CRV should not be interpreted as universally beneficial in its current form.
+Removing uncertainty weighting produces negligible changes under the current calibration. Removing CRV improves accuracy slightly at $N=6$ and $N=12$, indicating that the population-agreement heuristic can be redundant or miscalibrated when health and provenance weighting already discount unreliable reports.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.98\linewidth]{results_extended_v2/ablation_accuracy.pdf}
-  \caption{Corrected TrustPass ablation results with 95\% confidence intervals.}
+  \includegraphics[width=0.98\linewidth]{ablation_accuracy.pdf}
+  \caption{TRUSTPASS ablation results with 95\% confidence intervals.}
   \label{fig:ablation}
 \end{figure}
 
@@ -469,32 +472,34 @@ Table~\ref{tab:attack-sweep} reports the attack sweep at $N=12$.
 
 \begin{table}[t]
 \centering
-\caption{Accuracy under increasing compromised-agent fractions at $N=12$.}
+\caption{Accuracy under increasing compromised-agent fractions at $N=12$. Values are means over 80 trials.}
 \label{tab:attack-sweep}
 \scriptsize
 \begin{tabular}{ccccc}
 \toprule
-Compromised & TrustPass & DS-Trust & EBT & Majority \\
+Compromised & TRUSTPASS & DS-Trust & EBT & Majority \\
 \midrule
-0.10 & 0.999 & 0.998 & 0.998 & 0.998 \\
-0.20 & 0.998 & 0.997 & 0.997 & 0.993 \\
-0.30 & 0.993 & 0.978 & 0.982 & 0.954 \\
-0.40 & 0.990 & 0.952 & 0.957 & 0.898 \\
-0.50 & 0.975 & 0.925 & 0.926 & 0.800 \\
-0.60 & 0.965 & 0.869 & 0.862 & 0.675 \\
-0.70 & 0.922 & 0.781 & 0.757 & 0.544 \\
+0.10 & 1.000 & 1.000 & 0.999 & 0.998 \\
+0.20 & 1.000 & 1.000 & 0.995 & 0.993 \\
+0.30 & 1.000 & 1.000 & 0.976 & 0.956 \\
+0.40 & 1.000 & 0.998 & 0.944 & 0.898 \\
+0.50 & 1.000 & 0.990 & 0.886 & 0.807 \\
+0.60 & 0.999 & 0.966 & 0.794 & 0.666 \\
+0.70 & 0.987 & 0.912 & 0.673 & 0.535 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-TrustPass accuracy decreases as the compromised-agent fraction increases but remains above the baselines throughout the tested sweep. At 70\% compromised agents, TrustPass reaches 0.922, compared with 0.781 for DS-Trust, 0.757 for EBT, and 0.544 for Majority.
+TRUSTPASS remains near 1.000 accuracy through 60\% compromised agents and achieves 0.987 at 70\% compromise. At 70\% compromise, DS-Trust reaches 0.912, EBT reaches 0.673, and Majority reaches 0.535.
 
-These results should be interpreted as resilience within the simulator's threat model, not as a general guarantee against arbitrary collusion or compromise.
+From 10\% to 70\% compromise, TRUSTPASS decreases by approximately 1.3 percentage points, compared with 32.6 percentage points for EBT, 46.3 percentage points for Majority, and 8.8 percentage points for DS-Trust.
+
+These results indicate resilience within the implemented simulator threat model and do not constitute a general guarantee against arbitrary collusion or compromise.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.98\linewidth]{results_extended_v2/attack_sweep.pdf}
-  \caption{Accuracy as the fraction of compromised agents increases. Error bars show 95\% confidence intervals for TrustPass.}
+  \includegraphics[width=0.98\linewidth]{attack_sweep.pdf}
+  \caption{Accuracy as the compromised-agent fraction increases.}
   \label{fig:attack-sweep}
 \end{figure}
 
@@ -504,28 +509,30 @@ Table~\ref{tab:packet-loss} reports performance at increasing packet-loss rates.
 
 \begin{table}[t]
 \centering
-\caption{Accuracy under packet loss at $N=12$, with 55\% compromised agents and 12\% relay compromise.}
+\caption{Accuracy under packet loss at $N=12$, with 55\% compromised agents and 12\% relay compromise. Values are means over 80 trials.}
 \label{tab:packet-loss}
 \scriptsize
-\begin{tabular}{cccc}
+\begin{tabular}{ccccc}
 \toprule
-Packet loss & TrustPass & EBT & Majority \\
+Packet loss & Evidence received & TRUSTPASS & EBT & Majority \\
 \midrule
-0.00 & 0.963 & 0.858 & 0.674 \\
-0.10 & 0.945 & 0.839 & 0.670 \\
-0.20 & 0.930 & 0.820 & 0.655 \\
-0.30 & 0.914 & 0.800 & 0.623 \\
-0.40 & 0.890 & 0.778 & 0.586 \\
-0.50 & 0.862 & 0.756 & 0.563 \\
+0.00 & 1.000 & 0.999 & 0.795 & 0.671 \\
+0.10 & 0.899 & 0.996 & 0.777 & 0.663 \\
+0.20 & 0.798 & 0.989 & 0.758 & 0.656 \\
+0.30 & 0.696 & 0.975 & 0.740 & 0.646 \\
+0.40 & 0.595 & 0.954 & 0.717 & 0.627 \\
+0.50 & 0.496 & 0.928 & 0.683 & 0.613 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-At 50\% packet loss, TrustPass accuracy decreases to 0.862 but remains above EBT at 0.756 and Majority at 0.563. This indicates graceful degradation under the tested missing-evidence model. The result does not establish performance under real DTN scheduling, bandwidth constraints, propagation delay, or correlated packet loss.
+At 50\% packet loss, the mean fraction of received evidence is 0.496 and TRUSTPASS retains 0.928 accuracy. EBT and Majority reach 0.683 and 0.613, respectively.
+
+TRUSTPASS loses approximately 7.1 percentage points between zero and 50\% packet loss while remaining above both baselines throughout the sweep. These results apply to the simulator's independent packet-loss model and do not establish performance under realistic delay-tolerant networking contact schedules or correlated outages.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.98\linewidth]{results_extended_v2/packet_loss_sweep.pdf}
+  \includegraphics[width=0.98\linewidth]{packet_loss_sweep.pdf}
   \caption{Accuracy under packet loss. Missing packets are excluded from aggregation rather than treated as negative claims.}
   \label{fig:packet-loss}
 \end{figure}
@@ -533,15 +540,15 @@ At 50\% packet loss, TrustPass accuracy decreases to 0.862 but remains above EBT
 \section{Discussion}
 \label{sec:discussion}
 
-The revised evaluation changes the interpretation of TRUSTPASS in an important way. The results do not show that every architectural component improves accuracy in every regime. Instead, sensor-health and provenance/integrity weighting provide the strongest measured contributions. Dynamic reputation is most useful when the constellation is small. Uncertainty weighting has little measurable effect under the current calibration. The population-agreement CRV heuristic slightly reduces performance at small constellation sizes.
+The corrected evaluation shows that the largest measured contributions come from sensor-health weighting and provenance/integrity weighting. Dynamic reputation provides a supporting benefit, especially at the smallest constellation size. These results suggest that evidence quality and source integrity are more influential than confidence calibration under the current synthetic configuration.
 
-The CRV result is informative. A verifier that estimates consensus from the received population can be misled when compromised agents form the majority or when relay manipulation changes the apparent distribution. This motivates future CRV designs based on independent sensor modalities, provenance diversity, trusted anchors, temporal consistency, and explicit common-mode-failure detection.
+The uncertainty ablation produces negligible changes across the tested constellation sizes. This does not show that uncertainty is unimportant in general; it indicates that the current uncertainty model and calibration do not materially change binary decisions under these conditions.
 
-The provenance result should also be interpreted carefully. The simulator uses synthetic provenance-quality and integrity attributes rather than real signed PROV graphs. The result therefore supports the value of provenance/integrity weighting as a modeled mechanism, not the effectiveness of a particular provenance standard or cryptographic protocol.
+The CRV ablation is also informative. Removing CRV slightly improves accuracy at $N=6$ and $N=12$. The current CRV mechanism estimates a population-supported claim from received reports, so it can reinforce a misleading consensus when compromised agents dominate or when population agreement is not evidence of independence. More robust CRV designs should incorporate independent sensor modalities, provenance diversity, trusted anchors, temporal consistency, and common-mode-failure detection.
 
-The attack sweep shows that TrustPass remains more accurate than the selected baselines as the compromised-agent fraction increases from 10\% to 70\%. This is a result within the implemented threat model. It should not be generalized to arbitrary attackers that compromise signing keys, corrupt all independent sensors, or coordinate perfectly across the entire network.
+The attack sweep shows that TRUSTPASS remains near 1.000 accuracy through 60\% compromised agents and retains 0.987 accuracy at 70\% compromise. This result is limited to the implemented adversarial model, which includes false claims, forged confidence and uncertainty, degraded health indicators, provenance degradation, and relay compromise. It should not be generalized to attackers that compromise signing keys, corrupt all independent sensors, or coordinate perfectly across the entire network.
 
-The packet-loss sweep shows graceful degradation under independently missing packets. Real deep-space operation also requires modeling delay distributions, contact windows, bundle expiration, bandwidth scheduling, correlated outages, and delayed feedback. These are important directions for future work.
+The packet-loss sweep shows graceful degradation under independently missing packets. At 50\% packet loss, approximately half the evidence remains available and TRUSTPASS retains 0.928 accuracy. Real deep-space operation also requires modeling delay distributions, contact windows, bundle expiration, bandwidth scheduling, correlated outages, and delayed feedback.
 
 \section{Threats to Validity}
 \label{sec:validity}
@@ -550,16 +557,19 @@ The packet-loss sweep shows graceful degradation under independently missing pac
 The simulator uses binary phenomena, Gaussian sensor noise, synthetic provenance quality, synthetic integrity outcomes, and simplified adversarial behavior. It does not reproduce real spacecraft telemetry or planetary science workflows.
 
 \textbf{Parameter selection.}
-The original adversarial regime was selected to avoid majority-vote saturation. The revised sweeps broaden the tested range, but they do not constitute a complete factorial sensitivity analysis.
+The primary adversarial settings use 60\% compromised agents for $N=6$ and 55\% for $N=12$ and $N=25$. The attack and packet-loss sweeps broaden the tested range but do not constitute a complete factorial sensitivity analysis.
 
 \textbf{Ground-truth feedback.}
 Ground truth is available to the simulator for offline scoring and reputation feedback. An operational spacecraft would receive delayed validation rather than immediate ground truth.
 
 \textbf{CRV model.}
-The current CRV implementation uses a population-agreement heuristic. It can reinforce a false consensus when compromised agents dominate the received reports. More robust independence and common-mode-failure models are required.
+CRV currently uses a population-agreement heuristic. It does not establish independence among agents and may reinforce false consensus when compromised agents dominate received reports.
 
 \textbf{Provenance model.}
-The experiment uses synthetic provenance-quality and integrity attributes. It does not implement full PROV-DM, PROV-AGENT, secure hardware roots, or cryptographic key-management protocols.
+The experiment models provenance quality and integrity using synthetic attributes. It does not implement full PROV-DM, PROV-AGENT, secure hardware roots, or cryptographic key-management protocols.
+
+\textbf{Packet-loss model.}
+Packet loss is modeled as independent random evidence loss. The experiment does not model realistic delay-tolerant networking contact schedules, correlated outages, queueing, or bandwidth allocation.
 
 \textbf{Statistical scope.}
 Each configuration uses 80 trials and reports normal-approximation 95\% confidence intervals. The experiment does not provide a formal proof of security or statistical guarantees for all missions.
@@ -569,19 +579,29 @@ Each configuration uses 80 trials and reports normal-approximation 95\% confiden
 
 This paper framed cybersecurity assurance of AI-generated scientific claims in autonomous deep-space multi-agent systems as a distinct research problem. The proposed TRUSTPASS architecture combines machine-verifiable evidence packages, sensor-health assessment, provenance and integrity metadata, cross-relay verification, and dynamic reputation.
 
-The revised evaluation adds component ablations, attack-intensity sweeps, packet-loss experiments, and confidence intervals. Under the tested synthetic threat model, sensor-health and provenance/integrity weighting provide the strongest contributions, while dynamic reputation is most useful for smaller constellations. The current CRV heuristic does not improve accuracy in every configuration and can slightly reinforce misleading consensus. These findings identify both the value and the limitations of integrating evidence quality and trust mechanisms.
+The corrected evaluation includes component ablations, compromised-agent sweeps, packet-loss experiments, and confidence intervals over 80 Monte Carlo trials per condition. Sensor-health weighting provides the largest measured contribution, followed by provenance and integrity weighting. Dynamic reputation provides a supporting benefit in smaller constellations. TRUSTPASS remains near 1.000 accuracy through 60\% compromised agents and retains 0.987 accuracy at 70\% compromise in the tested model. At 50\% packet loss, it retains 0.928 accuracy with approximately 0.496 of evidence received.
 
-The results are a controlled proof of concept rather than a mission-ready validation. Future work should implement real provenance graphs, cryptographic attestation, independent sensor modalities, realistic DTN contact schedules, delayed-feedback reputation, stronger collusion models, and high-fidelity autonomous-science workflows.
+The results are a controlled proof of concept rather than a mission-ready validation. The uncertainty and CRV ablations also show that not every architectural component improves performance under every condition. Future work should implement real provenance graphs, cryptographic attestation, independent sensor modalities, realistic delay-tolerant networking schedules, delayed-feedback reputation, stronger collusion models, and high-fidelity autonomous-science workflows.
 
 \section*{Acknowledgment}
 
-The author thanks the open-source community for tools and datasets that supported this work. This research was conducted without specific grant support.
+The author used AI for \LaTeX{} editing and troubleshooting. The
+author reviewed and verified the final manuscript and takes full responsibility for its content, mathematical formulations, experimental design, results,interpretations, and references. 
+
+The simulation scripts, configuration, raw trial records, summary CSV files,
+and generated figures are available at:
+
+\url{https://github.com/netclouts/trustpass-extended-evaluation}
+
+The study uses synthetic observations and contains no restricted spacecraft
+telemetry or personally identifiable research data.
 
 \section*{Declarations}
 
 \subsection*{Competing Interests}
 
-The author declares that there are no financial or non-financial competing interests related to this work.
+The author declares that there are no financial or non-financial competing
+interests related to this work.
 
 \subsection*{Funding}
 
@@ -589,11 +609,13 @@ No funding was received for conducting this study or preparing this manuscript.
 
 \subsection*{Data Availability}
 
-The simulation scripts, configuration, random seeds, raw trial records, generated summary CSV files, and figures are available at:
+The simulation scripts, configuration, random seeds, raw trial records,
+generated summary CSV files, and figures are available at:
 
-\url{https://github.com/netclouts/deep-space-trustpass}
+\url{https://github.com/netclouts/trustpass-aeroconf-2785}
 
-The study uses synthetic observations and contains no restricted spacecraft telemetry or personally identifiable research data.
+The study uses synthetic observations and contains no restricted spacecraft
+telemetry or personally identifiable research data.
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}
