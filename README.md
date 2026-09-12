@@ -157,7 +157,14 @@ reviewed and verified the final manuscript and takes full responsibility for
 its content, mathematical formulations, experimental design, results,
 interpretations, and references.
 
+## Licensing
 
+The simulation source code is released under the MIT License.
+
+The generated CSV files and figures are released for research and
+reproducibility purposes under the same MIT License unless otherwise stated.
+The manuscript text and bibliographic metadata are included for scholarly
+reference and may be reused with appropriate attribution.
 
 ## Contact
 
